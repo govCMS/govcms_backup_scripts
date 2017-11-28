@@ -36,6 +36,7 @@ class BackUpCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output) {
         $FULL_DAY_TO_RUN = 'Sunday';
+        $export = array();
         $day_of_week = date('l');
         $destination = $input->getOption('destination');
         print "Running govCMS Backups for ".$day_of_week.".";
@@ -97,15 +98,22 @@ class BackUpCommand extends Command
 
                             $url = $backup_url->url;
                             print "\nFetching archive of ".$site->site." from ".$url." saving in ".$destination;
-                            exec("wget -b -o /tmp/wget-log -O ".$destination.$the_backup->file." '$url'");
+                            exec("wget -o /tmp/wget-log -O ".$destination."/".$the_backup->file." '$url'");
+                            $export[] = array('netid' => $site->id, 'archive-file' => $destination."/".$the_backup->file,
+                                'stack' => $site->stack_id, 'sitefactory_domain' => $site->domains, 'domains' => $site->collection_domains);
                         }
                     }
                 }
                 sleep(30);
             }
+            print "\n***************************\n";
             break;
         }
-
+        print "\nCreating File for mappings\n";
+        $fp = fopen($destination.'/mappings.json', 'w');
+        fwrite($fp, json_encode($export));
+        fclose($fp);
+        print "\nComplete.";
     }
 
     function endsWith($haystack, $needle) {
