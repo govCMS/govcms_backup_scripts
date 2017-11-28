@@ -37,7 +37,7 @@ class BackUpCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output) {
         $FULL_DAY_TO_RUN = 'Sunday';
         $day_of_week = date('l');
-        $destination = $input->getOption('destinations');
+        $destination = $input->getOption('destination');
         print "Running govCMS Backups for ".$day_of_week.".";
 
         $client = new Client([
