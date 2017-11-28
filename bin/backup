@@ -1,0 +1,19 @@
+<?php
+/**
+ * Created by IntelliJ IDEA.
+ * User: paulkilpatrick
+ * Date: 28-Nov-17
+ * Time: 10:50 AM
+ */
+
+ use Backup\Command\BackUpCommand;
+
+ require __DIR__.'/../vendor/autoload.php';
+
+ use Symfony\Component\Console\Application;
+
+ $application = new Application();
+
+ $application->add(new BackUpCommand());
+
+ $application->run();
