@@ -64,36 +64,39 @@ class BackUpCommand extends Command
                 $site_list[] = $result;
             }
         }
-        print "\nUsing ".sizeof($site_list)." sites.\n";
+        print "Using ".sizeof($site_list)." sites.\n";
 
-        foreach($site_list as $sites) {
-            $result = json_decode($client->request('POST', 'sites/'.$sites->id.'/backup', array(RequestOptions::JSON => array('components' => array('codebase', 'themes', 'database'))))->getBody());
+        foreach($site_list as $site) {
+            print "\n***************************\n";
+            print "Starting Backup of ".$site->site."\n";
+            $result = json_decode($client->request('POST', 'sites/'.$site->id.'/backup', array(RequestOptions::JSON => array('components' => array('codebase', 'themes', 'database'))))->getBody());
             $task_id = $result->task_id;
             $running = true;
             $task_exists = true;
             while($running && $task_exists) {
                 $task_exists = false;
-                print "Checking task for completion";
+                print "\nChecking task for completion";
                 $task_result = json_decode($client->request('GET', 'tasks')->getBody());
                 foreach($task_result as $task) {
                     if($task_id == $task->id) {
                         $task_exists = true;
                         if(!empty($task->error_message) || $task->completed != "0") {
                             //Job's finished
-                            print "Job Completed";
-                            $running = true;
+                            print "\nBackup Async Job Completed";
+                            $running = false;
                             //Need to get archive url to download.
-                            //TODO
-                            /**
-                             * API call to list site backups for this site.
-                             * sites/$sites->id/backups
-                             * Get maybe first result id?? check the latest is up the top.
-                             *
-                             * Once we have the backup ID. call API to get site backup URL
-                             * sites/$sites->id/backups/$backup_id/url
-                             * Get the url and download it to $destination
-                             *
-                             */
+                            $list_backups = json_decode($client->request('GET', 'sites/'.$site->id.'/backups')->getBody());
+
+                            if(sizeof($list_backups->backups) == 0) {
+                                print "\nNo Backups exist";
+                                continue;
+                            }
+                            $the_backup = $list_backups->backups[0];
+                            $backup_url = json_decode($client->request('GET', 'sites/'.$site->id.'/backups/'.$the_backup->id.'/url')->getBody());
+
+                            $url = $backup_url->url;
+                            print "\nFetching archive of ".$site->site." from ".$url." saving in ".$destination;
+                            exec("wget -b -P ".$destination." '$url'");
                         }
                     }
                 }
