@@ -6,6 +6,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
 
 class BackUpCommand extends Command
 {
@@ -34,7 +35,9 @@ class BackUpCommand extends Command
     }
 
     protected function execute(InputInterface $input, OutputInterface $output) {
+        $FULL_DAY_TO_RUN = 'Sunday';
         $day_of_week = date('l');
+        $destination = $input->getOption('destinations');
         print "Running govCMS Backups for ".$day_of_week.".";
 
         $client = new Client([
@@ -55,13 +58,49 @@ class BackUpCommand extends Command
         $site_list = array();
         foreach ($temp_site_list as $key => $value) {
             $result = json_decode($client->request('GET', 'sites/'.$value->id)->getBody());
-            if($day_of_week == 'Sunday') {
+            if($day_of_week == $FULL_DAY_TO_RUN) {
                 $site_list[] = $result;
             } else if(isset($result->is_primary) && $result->is_primary) {
                 $site_list[] = $result;
             }
         }
         print "\nUsing ".sizeof($site_list)." sites.\n";
+
+        foreach($site_list as $sites) {
+            $result = json_decode($client->request('POST', 'sites/'.$sites->id.'/backup', array(RequestOptions::JSON => array('components' => array('codebase', 'themes', 'database'))))->getBody());
+            $task_id = $result->task_id;
+            $running = true;
+            $task_exists = true;
+            while($running && $task_exists) {
+                $task_exists = false;
+                print "Checking task for completion";
+                $task_result = json_decode($client->request('GET', 'tasks')->getBody());
+                foreach($task_result as $task) {
+                    if($task_id == $task->id) {
+                        $task_exists = true;
+                        if(!empty($task->error_message) || $task->completed != "0") {
+                            //Job's finished
+                            print "Job Completed";
+                            $running = true;
+                            //Need to get archive url to download.
+                            //TODO
+                            /**
+                             * API call to list site backups for this site.
+                             * sites/$sites->id/backups
+                             * Get maybe first result id?? check the latest is up the top.
+                             *
+                             * Once we have the backup ID. call API to get site backup URL
+                             * sites/$sites->id/backups/$backup_id/url
+                             * Get the url and download it to $destination
+                             *
+                             */
+                        }
+                    }
+                }
+                sleep(30);
+            }
+            break;
+        }
 
     }
 
