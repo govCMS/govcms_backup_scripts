@@ -97,7 +97,7 @@ class BackUpCommand extends Command
 
                             $url = $backup_url->url;
                             print "\nFetching archive of ".$site->site." from ".$url." saving in ".$destination;
-                            exec("wget -b -P ".$destination." -O ".$the_backup->file." '$url'");
+                            exec("wget -b -o /tmp/wget-log -O ".$destination.$the_backup->file." '$url'");
                         }
                     }
                 }
