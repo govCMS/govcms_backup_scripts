@@ -45,9 +45,6 @@ class BackUpCommand extends Command
             'auth' => [$input->getOption('api-username'), $input->getOption('api-key')],
         ]);
 
-        var_dump(json_decode($client->request('GET', 'sites/126/backups/3326/url')->getBody()));
-        exit;
-
         $result_size = 1;
         $temp_site_list = array();
         $page = 1;
