@@ -44,6 +44,10 @@ class BackUpCommand extends Command
             'base_uri' => 'https://www.govcms.acsitefactory.com/api/v1/',
             'auth' => [$input->getOption('api-username'), $input->getOption('api-key')],
         ]);
+
+        var_dump(json_decode($client->request('GET', 'sites/126/backups/3326/url')->getBody()));
+        exit;
+
         $result_size = 1;
         $temp_site_list = array();
         $page = 1;
@@ -96,7 +100,7 @@ class BackUpCommand extends Command
 
                             $url = $backup_url->url;
                             print "\nFetching archive of ".$site->site." from ".$url." saving in ".$destination;
-                            exec("wget -b -P ".$destination." '$url'");
+                            exec("wget -b -P ".$destination." -O ".$the_backup->file." '$url'");
                         }
                     }
                 }
