@@ -117,7 +117,7 @@ class BackUpCommand extends Command
                                 $stack_string = $site->stack_id;
                             }
                             if (isset($site->is_primary) && $site->is_primary) {
-                                $export[] = array('netid' => $site->id, 'backup_id' => $the_backup->id, 'archive_file' => $destination . "/" . $the_backup->file,
+                                $export[] = array('netid' => $site->id, 'backup_id' => $the_backup->id, 'archive_file' => $destination . "/".$BACKUP_DATE_DIR."/" . $the_backup->file,
                                     'stack' => $stack_string, 'sitefactory_domain' => $site->domains, 'domains' => $site->collection_domains);
 
                             }
@@ -129,7 +129,7 @@ class BackUpCommand extends Command
             $total_time = time() - $start;
             print "\n".$site->site." took ".$total_time." seconds.";
             print "\n***************************\n";
-            if($temp_count > 4) {
+            if($temp_count > 2) {
                 break;
             }
         }
