@@ -76,7 +76,11 @@ class BackUpCommand extends Command
         print "Using ".sizeof($site_list)." sites.\n";
         print "Creating folder for ".$destination."/".$BACKUP_DATE_DIR."\n";
         mkdir($destination."/".$BACKUP_DATE_DIR);
+
+        $temp_count = 0;
         foreach($site_list as $site) {
+            $temp_count++;
+            $start = time();
             print "\n***************************\n";
             print "Starting Backup of ".$site->site."\n";
             $result = json_decode($client->request('POST', 'sites/'.$site->id.'/backup', array(RequestOptions::JSON => array('components' => array('codebase', 'themes', 'database'))))->getBody());
@@ -122,8 +126,12 @@ class BackUpCommand extends Command
                 }
                 sleep(30);
             }
+            $total_time = time() - $start;
+            print "\n".$site->site." took ".$total_time." seconds.";
             print "\n***************************\n";
-            break;
+            if($temp_count > 4) {
+                break;
+            }
         }
         print "\nCreating File for mappings\n";
         $fp = fopen($destination.'/mappings.json', 'w');
