@@ -112,7 +112,7 @@ class BackUpCommand extends Command
                             } else {
                                 $stack_string = $site->stack_id;
                             }
-                            if (isset($result->is_primary) && $result->is_primary) {
+                            if (isset($site->is_primary) && $site->is_primary) {
                                 $export[] = array('netid' => $site->id, 'backup-id' => $the_backup->id, 'archive-file' => $destination . "/" . $the_backup->file,
                                     'stack' => $stack_string, 'sitefactory_domain' => $site->domains, 'domains' => $site->collection_domains);
 
