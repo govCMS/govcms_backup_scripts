@@ -36,6 +36,13 @@ class BackUpCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output) {
         $FULL_DAY_TO_RUN = 'Sunday';
+        print "\n\n".dirname(__FILE__)."/../../conf/config.json"."\n\n";
+        if(file_exists(dirname(__FILE__)."/../../conf/config.json")) {
+            $config_exists = true;
+            $config = json_decode(file_get_contents(dirname(__FILE__)."/../../conf/config.json"));
+        } else {
+            $config_exists = false;
+        }
         $export = array();
         $day_of_week = date('l');
         $destination = $input->getOption('destination');
@@ -87,20 +94,28 @@ class BackUpCommand extends Command
                             print "\nBackup Async Job Completed";
                             $running = false;
                             //Need to get archive url to download.
-                            $list_backups = json_decode($client->request('GET', 'sites/'.$site->id.'/backups')->getBody());
+                            $list_backups = json_decode($client->request('GET', 'sites/' . $site->id . '/backups')->getBody());
 
-                            if(sizeof($list_backups->backups) == 0) {
+                            if (sizeof($list_backups->backups) == 0) {
                                 print "\nNo Backups exist";
                                 continue;
                             }
                             $the_backup = $list_backups->backups[0];
-                            $backup_url = json_decode($client->request('GET', 'sites/'.$site->id.'/backups/'.$the_backup->id.'/url')->getBody());
+                            $backup_url = json_decode($client->request('GET', 'sites/' . $site->id . '/backups/' . $the_backup->id . '/url')->getBody());
 
                             $url = $backup_url->url;
-                            print "\nFetching archive of ".$site->site." from ".$url." saving in ".$destination;
-                            exec("wget -o /tmp/wget-log -O ".$destination."/".$the_backup->file." '$url'");
-                            $export[] = array('netid' => $site->id, 'archive-file' => $destination."/".$the_backup->file,
-                                'stack' => $site->stack_id, 'sitefactory_domain' => $site->domains, 'domains' => $site->collection_domains);
+                            print "\nFetching archive of " . $site->site . " from " . $url . " saving in " . $destination;
+                            exec("wget -o /tmp/wget-log -O " . $destination . "/" . $the_backup->file . " '$url'");
+                            if ($config_exists) {
+                                $stack_string = $config->stacks[$site->stack_id - 1];
+                            } else {
+                                $stack_string = $site->stack_id;
+                            }
+                            if (isset($result->is_primary) && $result->is_primary) {
+                                $export[] = array('netid' => $site->id, 'backup-id' => $the_backup->id, 'archive-file' => $destination . "/" . $the_backup->file,
+                                    'stack' => $stack_string, 'sitefactory_domain' => $site->domains, 'domains' => $site->collection_domains);
+
+                            }
                         }
                     }
                 }
