@@ -110,7 +110,7 @@ class BackUpCommand extends Command
 
                             $url = $backup_url->url;
                             print "\nFetching archive of " . $site->site . " from " . $url . " saving in " . $destination."/".$BACKUP_DATE_DIR;
-                            exec("wget -o /tmp/wget-log -O " . $destination . "/".$BACKUP_DATE_DIR."/" . $the_backup->file . " '$url'");
+                            exec("wget -o /tmp/wget-log -O " . $destination . "/".$BACKUP_DATE_DIR."/" . $the_backup->file . " '$url' >/dev/null 2>/dev/null &");
                             if ($config_exists) {
                                 $stack_string = $config->stacks[$site->stack_id - 1];
                             } else {
@@ -124,7 +124,7 @@ class BackUpCommand extends Command
                         }
                     }
                 }
-                sleep(30);
+                sleep(15);
             }
             $total_time = time() - $start;
             print "\n".$site->site." took ".$total_time." seconds.";
@@ -135,7 +135,7 @@ class BackUpCommand extends Command
         }
         print "\nCreating File for mappings\n";
         $fp = fopen($destination.'/mappings.json', 'w');
-        fwrite($fp, json_encode($export));
+        fwrite($fp, json_encode($export, JSON_PRETTY_PRINT));
         fclose($fp);
         print "\nComplete.";
     }
