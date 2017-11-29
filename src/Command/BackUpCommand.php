@@ -36,7 +36,7 @@ class BackUpCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output) {
         $FULL_DAY_TO_RUN = 'Sunday';
-        $BACKUP_DATE_DIR = date('Ymd');
+        $BACKUP_DATE_DIR = date('Y-m-d');
         if(file_exists(dirname(__FILE__)."/../../conf/config.json")) {
             $config_exists = true;
             $config = json_decode(file_get_contents(dirname(__FILE__)."/../../conf/config.json"));
@@ -74,7 +74,8 @@ class BackUpCommand extends Command
             }
         }
         print "Using ".sizeof($site_list)." sites.\n";
-
+        print "Creating folder for ".$destination."/".$BACKUP_DATE_DIR."\n";
+        mkdir($destination."/".$BACKUP_DATE_DIR);
         foreach($site_list as $site) {
             print "\n***************************\n";
             print "Starting Backup of ".$site->site."\n";
@@ -104,7 +105,7 @@ class BackUpCommand extends Command
                             $backup_url = json_decode($client->request('GET', 'sites/' . $site->id . '/backups/' . $the_backup->id . '/url')->getBody());
 
                             $url = $backup_url->url;
-                            print "\nFetching archive of " . $site->site . " from " . $url . " saving in " . $destination;
+                            print "\nFetching archive of " . $site->site . " from " . $url . " saving in " . $destination."/".$BACKUP_DATE_DIR;
                             exec("wget -o /tmp/wget-log -O " . $destination . "/".$BACKUP_DATE_DIR."/" . $the_backup->file . " '$url'");
                             if ($config_exists) {
                                 $stack_string = $config->stacks[$site->stack_id - 1];
