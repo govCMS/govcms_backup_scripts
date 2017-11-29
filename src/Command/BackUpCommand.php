@@ -117,7 +117,9 @@ class BackUpCommand extends Command
                             //$cmd = "nohup wget -q -o /tmp/wget-log -O " . $destination . "/".$BACKUP_DATE_DIR."/" . $the_backup->file . " '$url' /dev/null 2>&1 &";
                             //$exec = exec( 'bash -c "'.$cmd.'"' );
 
-                            exec('bash -c "exec nohup setsid '.$command.' > /dev/null 2>&1 &"');
+                            //exec('bash -c "exec nohup setsid '.$command.' > /dev/null 2>&1 &"');
+
+                            pclose(popen($command, "r"));
 
                             if ($config_exists) {
                                 $stack_string = $config->stacks[$site->stack_id - 1];
@@ -137,9 +139,6 @@ class BackUpCommand extends Command
             $total_time = time() - $start;
             print "\n".$site->site." took ".$total_time." seconds.";
             print "\n***************************\n";
-            if($temp_count > 2) {
-                break;
-            }
         }
         print "\nCreating File for mappings\n";
         $fp = fopen($destination.'/mappings.json', 'w');
