@@ -111,11 +111,13 @@ class BackUpCommand extends Command
                             $url = $backup_url->url;
                             print "\nFetching archive of " . $site->site . " from " . $url . " saving in " . $destination."/".$BACKUP_DATE_DIR;
 
-                            //$command = "wget -o /tmp/wget-log -O " . $destination . "/".$BACKUP_DATE_DIR."/" . $the_backup->file . " '$url'";
+                            $command = "wget -o /tmp/wget-log -O " . $destination . "/".$BACKUP_DATE_DIR."/" . $the_backup->file . " '$url'";
                             //exec('nohup ' . $command . ' >> /dev/null 2>&1 echo $!', $pid);
 
-                            $cmd = "nohup wget -q -o /tmp/wget-log -O " . $destination . "/".$BACKUP_DATE_DIR."/" . $the_backup->file . " '$url' /dev/null 2>&1 &";
-                            $exec = exec( 'bash -c "'.$cmd.'"' );
+                            //$cmd = "nohup wget -q -o /tmp/wget-log -O " . $destination . "/".$BACKUP_DATE_DIR."/" . $the_backup->file . " '$url' /dev/null 2>&1 &";
+                            //$exec = exec( 'bash -c "'.$cmd.'"' );
+
+                            exec('bash -c "exec nohup setsid '.$command.' > /dev/null 2>&1 &"');
 
                             if ($config_exists) {
                                 $stack_string = $config->stacks[$site->stack_id - 1];
