@@ -36,6 +36,7 @@ class BackUpCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output) {
         $FULL_DAY_TO_RUN = 'Sunday';
+        $BACKUP_DATE_DIR = date('Ymd');
         print "\n\n".dirname(__FILE__)."/../../conf/config.json"."\n\n";
         if(file_exists(dirname(__FILE__)."/../../conf/config.json")) {
             $config_exists = true;
@@ -105,7 +106,7 @@ class BackUpCommand extends Command
 
                             $url = $backup_url->url;
                             print "\nFetching archive of " . $site->site . " from " . $url . " saving in " . $destination;
-                            exec("wget -o /tmp/wget-log -O " . $destination . "/" . $the_backup->file . " '$url'");
+                            exec("wget -o /tmp/wget-log -O " . $destination . "/".$BACKUP_DATE_DIR."/" . $the_backup->file . " '$url'");
                             if ($config_exists) {
                                 $stack_string = $config->stacks[$site->stack_id - 1];
                             } else {
