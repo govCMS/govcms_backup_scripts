@@ -37,7 +37,6 @@ class BackUpCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output) {
         $FULL_DAY_TO_RUN = 'Sunday';
         $BACKUP_DATE_DIR = date('Ymd');
-        print "\n\n".dirname(__FILE__)."/../../conf/config.json"."\n\n";
         if(file_exists(dirname(__FILE__)."/../../conf/config.json")) {
             $config_exists = true;
             $config = json_decode(file_get_contents(dirname(__FILE__)."/../../conf/config.json"));
