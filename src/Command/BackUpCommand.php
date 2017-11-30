@@ -41,7 +41,6 @@ class BackUpCommand extends Command
         $BACKUP_DATE_DIR = date('Y-m-d');
         mkdir($destination."/".$BACKUP_DATE_DIR);
         $destination = $destination."/".$BACKUP_DATE_DIR."/";
-        mkdir($destination."backups");
 
         $START_PHP = "<?php ";
         $TEMPLATE= "\n
@@ -142,9 +141,6 @@ class BackUpCommand extends Command
             $total_time = time() - $start_time;
             print "\n".$site->site." took ".$total." seconds out of total ".$total_time." seconds.";
             print "\n***************************\n";
-            if($temp_count > 1) {
-                break;
-            }
         }
         fwrite($sites_file, $sites_file_content);
         copy($destination."sites.txt", "/home/govcms/.drush/sites.txt");
