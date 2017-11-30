@@ -122,7 +122,7 @@ class BackUpCommand extends Command
         }
 
         fwrite($alias_file, $alias_file_content);
-        copy($destination."/govcms.aliases.drushrc.php", "~/.drush/");
+        copy($destination."/govcms.aliases.drushrc.php", "~/.drush/govcms.aliases.drushrc.php");
 
         foreach($site_list as $site) {
             $temp_count++;
