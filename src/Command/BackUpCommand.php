@@ -133,9 +133,9 @@ class BackUpCommand extends Command
             print "Starting Backup of ".$site->site." [".$site->domains[0]."]\n";
             exec("drush @".$site->domains[0]." archive-dump --destination=/mnt/tmp/backups/".$site->domains[0].".tar.gz --overwrite");
             print "Dump completed.\n";
-            mkdir($destination."backups/".$site->domains[0]);
+            mkdir($destination.$site->domains[0]);
             print "Retrieving ".$site->site." [".$site->domains[0]."] dump.\n";
-            exec("drush -y rsync --remove-source-files @".$site->domains[0].":/mnt/tmp/backups/".$site->domains[0].".tar.gz ".$destination."backups/".$site->domains[0]."/ > /dev/null 2>/dev/null &");
+            exec("drush -y rsync --remove-source-files @".$site->domains[0].":/mnt/tmp/backups/".$site->domains[0].".tar.gz ".$destination.$site->domains[0]."/ > /dev/null 2>/dev/null &");
             $domains = implode(" ", $site->collection_domains);
             $sites_file_content .= $site->domains[0]." ".$site->domains[0].".tar.gz ".$destination.$site->domains[0]."/".$site->domains[0].".tar.gz ".$site->id." \"".$domains." ".$site->domains[0]."\"\n";
             $total = time() - $start;
