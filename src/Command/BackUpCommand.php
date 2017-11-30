@@ -6,7 +6,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use GuzzleHttp\Client;
-use GuzzleHttp\RequestOptions;
 
 class BackUpCommand extends Command
 {
@@ -35,17 +34,41 @@ class BackUpCommand extends Command
     }
 
     protected function execute(InputInterface $input, OutputInterface $output) {
-        $FULL_DAY_TO_RUN = 'Sunday';
-        $BACKUP_DATE_DIR = date('Y-m-d');
-        if(file_exists(dirname(__FILE__)."/../../conf/config.json")) {
-            $config_exists = true;
-            $config = json_decode(file_get_contents(dirname(__FILE__)."/../../conf/config.json"));
-        } else {
-            $config_exists = false;
-        }
+        $start_time = time();
         $export = array();
         $day_of_week = date('l');
         $destination = $input->getOption('destination');
+        $FULL_DAY_TO_RUN = 'Sunday';
+        $BACKUP_DATE_DIR = date('Y-m-d');
+        mkdir($destination."/".$BACKUP_DATE_DIR);
+        $destination = $destination."/".$BACKUP_DATE_DIR."/";
+        mkdir($destination."backups");
+
+        $START_PHP = "<?php ";
+        $TEMPLATE= "\n
+\$aliases['%%ALIASNAME%%'] = array(
+    'uri' => '%%ALIASNAME%%',
+    'root' => '%%ROOT%%',
+    'remote-host' => '%%REMOTEHOST%%',
+    'remote-user' => '%%REMOTEUSER%%',
+    'ssh-options' => '-F /dev/null',
+    'path-aliases' => array(
+      '%drush-script' => 'drush6',
+      '%dump-dir' => '/mnt/tmp/',
+    ),
+    'command-specific' => array(
+      'sql-dump' => array(
+         'no-ordered-dump' => TRUE,
+         'structure-tables-list' => 'apachesolr_index_entities,apachesolr_index_entities_node,authmap,cache,cache_apachesolr,cache_block,cache_bootstrap,cache_entity_comment,cache_entity_file,cache_entity_node,cache_entity_taxonomy_term,cache_entity_taxonomy_vocabulary,cache_entity_user,cache_field,cache_file_styles,cache_filter,cache_form,cache_image,cache_libraries,cache_menu,cache_metatag,cache_page,cache_panels,cache_path,cache_rules,cache_styles,cache_token,cache_update,cache_views,cache_views_data,captcha_sessions,ctools_css_cache,ctools_object_cache,flood,forward_log,forward_statistics,history,queue,sessions,watchdog',
+      ),
+    ),
+);";
+
+        $alias_file = fopen($destination."/govcms.aliases.drushrc.php", 'w');
+        $name_file = fopen($destination."/output.txt", 'w');
+
+        $lines = file(dirname(__FILE__)."/../../conf/config", FILE_IGNORE_NEW_LINES);
+
         print "Running govCMS Backups for ".$day_of_week.".";
 
         $client = new Client([
@@ -74,76 +97,52 @@ class BackUpCommand extends Command
             }
         }
         print "Using ".sizeof($site_list)." sites.\n";
-        print "Creating folder for ".$destination."/".$BACKUP_DATE_DIR."\n";
-        mkdir($destination."/".$BACKUP_DATE_DIR);
 
         $temp_count = 0;
+        $alias_file_content = $START_PHP;
+        foreach($site_list as $site) {
+            $single_alias = $TEMPLATE;
+            $root = "";
+            $remote_host = "";
+            $remote_user = "";
+            foreach($lines as $line) {
+                $temp_array = explode(" ", $line);
+                if($temp_array[0] == $site->stack_id) {
+                    $root = $temp_array[3];
+                    $remote_host = $temp_array[2];
+                    $remote_user = $temp_array[1];
+                }
+            }
+            $variables = array("ALIASNAME" => $site->domains[0], "ROOT" => $root, "REMOTEHOST" => $remote_host, "REMOTEUSER" => $remote_user);
+
+            foreach ($variables as $key => $value) {
+                $single_alias = str_replace('%%' . $key . '%%', $value, $single_alias);
+            }
+            $alias_file_content .= $single_alias;
+        }
+
+        fwrite($alias_file, $alias_file_content);
+        copy($destination."/govcms.aliases.drushrc.php", "~/.drush/");
+
         foreach($site_list as $site) {
             $temp_count++;
             $start = time();
             print "\n***************************\n";
-            print "Starting Backup of ".$site->site."\n";
-            $result = json_decode($client->request('POST', 'sites/'.$site->id.'/backup', array(RequestOptions::JSON => array('components' => array('codebase', 'themes', 'database'))))->getBody());
-            $task_id = $result->task_id;
-            $running = true;
-            $task_exists = true;
-            while($running && $task_exists) {
-                $task_exists = false;
-                print "\nChecking task for completion";
-                $task_result = json_decode($client->request('GET', 'tasks')->getBody());
-                foreach($task_result as $task) {
-                    if($task_id == $task->id) {
-                        $task_exists = true;
-                        if(!empty($task->error_message) || $task->completed != "0") {
-                            //Job's finished
-                            print "\nBackup Async Job Completed";
-                            $running = false;
-                            //Need to get archive url to download.
-                            $list_backups = json_decode($client->request('GET', 'sites/' . $site->id . '/backups')->getBody());
-
-                            if (sizeof($list_backups->backups) == 0) {
-                                print "\nNo Backups exist";
-                                continue;
-                            }
-                            $the_backup = $list_backups->backups[0];
-                            $backup_url = json_decode($client->request('GET', 'sites/' . $site->id . '/backups/' . $the_backup->id . '/url')->getBody());
-
-                            $url = $backup_url->url;
-                            print "\nFetching archive of " . $site->site . " from " . $url . " saving in " . $destination."/".$BACKUP_DATE_DIR;
-
-                            $command = "wget -o /tmp/wget-log -O " . $destination . "/".$BACKUP_DATE_DIR."/" . $the_backup->file . " '$url'";
-                            //exec('nohup ' . $command . ' >> /dev/null 2>&1 echo $!', $pid);
-
-                            //$cmd = "nohup wget -q -o /tmp/wget-log -O " . $destination . "/".$BACKUP_DATE_DIR."/" . $the_backup->file . " '$url' /dev/null 2>&1 &";
-                            //$exec = exec( 'bash -c "'.$cmd.'"' );
-
-                            //exec('bash -c "exec nohup setsid '.$command.' > /dev/null 2>&1 &"');
-
-                            pclose(popen($command, "r"));
-
-                            if ($config_exists) {
-                                $stack_string = $config->stacks[$site->stack_id - 1];
-                            } else {
-                                $stack_string = $site->stack_id;
-                            }
-                            if (isset($site->is_primary) && $site->is_primary) {
-                                $export[] = array('netid' => $site->id, 'backup_id' => $the_backup->id, 'archive_file' => $destination . "/".$BACKUP_DATE_DIR."/" . $the_backup->file,
-                                    'stack' => $stack_string, 'sitefactory_domain' => $site->domains, 'domains' => $site->collection_domains);
-
-                            }
-                        }
-                    }
-                }
-                sleep(15);
-            }
-            $total_time = time() - $start;
-            print "\n".$site->site." took ".$total_time." seconds.";
+            print "Starting Backup of ".$site->site." [".$site->domains[0]."]\n";
+            exec("drush @".$site->domains[0]." archive-dump --destination=/mnt/tmp/backups/".$site->domains[0]." --overwrite");
+            print "Dump completed.\n";
+            mkdir($destination."backups/".$site->domains[0]);
+            print "Retrieving ".$site->site." [".$site->domains[0]."] dump.\n";
+            exec("drush -y rsync --remove-source-files @".$site->domains[0].":/mnt/tmp/backups/".$site->domains[0]."tar.gz ".$destination."/backups/".$site->domains[0]);
+            //TODO: DOMAIN MAPPINGS?
+            $total = time() - $start;
+            $total_time = time() - $start_time;
+            print "\n".$site->site." took ".$total." seconds out of total ".$total_time." seconds.";
             print "\n***************************\n";
+            if($temp_count > 2) {
+                break;
+            }
         }
-        print "\nCreating File for mappings\n";
-        $fp = fopen($destination.'/mappings.json', 'w');
-        fwrite($fp, json_encode($export, JSON_PRETTY_PRINT));
-        fclose($fp);
         print "\nComplete.";
     }
 
