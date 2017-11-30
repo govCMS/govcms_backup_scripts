@@ -129,7 +129,7 @@ class BackUpCommand extends Command
             $temp_count++;
             $start = time();
             print "\n***************************\n";
-            print "Starting Backup of ".$site->site." [".$site->domains[0]."]\n";
+            print "Starting Backup of ".$site->site." [".$site->domains[0]."] #".$temp_count."\n";
             exec("drush @".$site->domains[0]." archive-dump --destination=/mnt/tmp/backups/".$site->domains[0].".tar.gz --overwrite");
             print "Dump completed.\n";
             mkdir($destination.$site->domains[0]);
