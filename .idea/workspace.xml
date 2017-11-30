@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="28359e0b-c40e-4669-b3b8-b0205d3d64bb" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Command/BackUpCommand.php" afterPath="$PROJECT_DIR$/src/Command/BackUpCommand.php" />
     </list>
@@ -28,8 +27,8 @@
       <file leaf-file-name="BackUpCommand.php" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Command/BackUpCommand.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="236">
-              <caret line="124" column="70" lean-forward="true" selection-start-line="124" selection-start-column="70" selection-end-line="124" selection-end-column="70" />
+            <state relative-caret-position="276">
+              <caret line="137" column="127" lean-forward="false" selection-start-line="137" selection-start-column="127" selection-end-line="137" selection-end-column="127" />
               <folding>
                 <element signature="e#33#79#0#PHP" expanded="true" />
               </folding>
@@ -254,12 +253,12 @@
       <updated>1511825809481</updated>
       <workItem from="1511825814377" duration="17471000" />
       <workItem from="1511915087904" duration="11658000" />
-      <workItem from="1511996687563" duration="5849000" />
+      <workItem from="1511996687563" duration="7584000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="34978000" />
+    <option name="totallyTimeSpent" value="36713000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1912" y="-8" width="1936" height="1066" extended-state="6" />
@@ -390,8 +389,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Command/BackUpCommand.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="236">
-          <caret line="124" column="70" lean-forward="true" selection-start-line="124" selection-start-column="70" selection-end-line="124" selection-end-column="70" />
+        <state relative-caret-position="276">
+          <caret line="137" column="127" lean-forward="false" selection-start-line="137" selection-start-column="127" selection-end-line="137" selection-end-column="127" />
           <folding>
             <element signature="e#33#79#0#PHP" expanded="true" />
           </folding>

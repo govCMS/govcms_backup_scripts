@@ -35,7 +35,6 @@ class BackUpCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output) {
         $start_time = time();
-        $export = array();
         $day_of_week = date('l');
         $destination = $input->getOption('destination');
         $FULL_DAY_TO_RUN = 'Sunday';
@@ -65,7 +64,7 @@ class BackUpCommand extends Command
 );";
 
         $alias_file = fopen($destination."/govcms.aliases.drushrc.php", 'w');
-        $name_file = fopen($destination."/output.txt", 'w');
+        $sites_file = fopen($destination."/sites.txt", 'w');
 
         $lines = file(dirname(__FILE__)."/../../conf/config", FILE_IGNORE_NEW_LINES);
 
@@ -100,6 +99,7 @@ class BackUpCommand extends Command
 
         $temp_count = 0;
         $alias_file_content = $START_PHP;
+        $sites_file_content = "";
         foreach($site_list as $site) {
             $single_alias = $TEMPLATE;
             $root = "";
@@ -134,7 +134,8 @@ class BackUpCommand extends Command
             mkdir($destination."backups/".$site->domains[0]);
             print "Retrieving ".$site->site." [".$site->domains[0]."] dump.\n";
             exec("drush -y rsync --remove-source-files @".$site->domains[0].":/mnt/tmp/backups/".$site->domains[0]."tar.gz ".$destination."/backups/".$site->domains[0]);
-            //TODO: DOMAIN MAPPINGS?
+            $domains = implode(" ", $site->collection_domains);
+            $sites_file_content .= $site->domains[0]." ".$site->domains[0].".tar.gz ".$destination.$site->domains[0]."/backups/".$site->domains[0].".tar.gz ".$site->id." \"".$domains." ".$site->domains[0]."\"\n";
             $total = time() - $start;
             $total_time = time() - $start_time;
             print "\n".$site->site." took ".$total." seconds out of total ".$total_time." seconds.";
@@ -143,6 +144,7 @@ class BackUpCommand extends Command
                 break;
             }
         }
+        fwrite($sites_file, $sites_file_content);
         print "\nComplete.";
     }
 
