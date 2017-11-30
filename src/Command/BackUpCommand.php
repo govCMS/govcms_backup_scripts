@@ -147,6 +147,7 @@ class BackUpCommand extends Command
             }
         }
         fwrite($sites_file, $sites_file_content);
+        copy($destination."sites.txt", "/home/govcms/.drush/sites.txt");
         print "\nComplete.";
     }
 
