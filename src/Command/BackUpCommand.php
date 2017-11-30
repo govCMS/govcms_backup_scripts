@@ -122,6 +122,8 @@ class BackUpCommand extends Command
         }
 
         fwrite($alias_file, $alias_file_content);
+
+        print("\nCopying file [".$destination."/govcms.aliases.drushrc.php] to [~/.drush/govcms.aliases.drushrc.php]");
         copy($destination."/govcms.aliases.drushrc.php", "~/.drush/govcms.aliases.drushrc.php");
 
         foreach($site_list as $site) {
@@ -133,7 +135,7 @@ class BackUpCommand extends Command
             print "Dump completed.\n";
             mkdir($destination."backups/".$site->domains[0]);
             print "Retrieving ".$site->site." [".$site->domains[0]."] dump.\n";
-            exec("drush -y rsync --remove-source-files @".$site->domains[0].":/mnt/tmp/backups/".$site->domains[0].".tar.gz ".$destination."/backups/".$site->domains[0]);
+            exec("drush -y rsync --remove-source-files @".$site->domains[0].":/mnt/tmp/backups/".$site->domains[0].".tar.gz ".$destination."/backups/".$site->domains[0]." > /dev/null 2>/dev/null &");
             $domains = implode(" ", $site->collection_domains);
             $sites_file_content .= $site->domains[0]." ".$site->domains[0].".tar.gz ".$destination.$site->domains[0]."/backups/".$site->domains[0].".tar.gz ".$site->id." \"".$domains." ".$site->domains[0]."\"\n";
             $total = time() - $start;
