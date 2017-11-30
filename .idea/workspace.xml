@@ -27,8 +27,8 @@
       <file leaf-file-name="BackUpCommand.php" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Command/BackUpCommand.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="322">
-              <caret line="151" column="5" lean-forward="false" selection-start-line="151" selection-start-column="5" selection-end-line="151" selection-end-column="5" />
+            <state relative-caret-position="276">
+              <caret line="143" column="52" lean-forward="false" selection-start-line="143" selection-start-column="52" selection-end-line="143" selection-end-column="52" />
               <folding>
                 <element signature="e#33#79#0#PHP" expanded="true" />
               </folding>
@@ -63,6 +63,7 @@
       <find>var_dump</find>
       <find>$BACKUP_DATE_DIR</find>
       <find>$config</find>
+      <find>$start_time</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -253,12 +254,12 @@
       <updated>1511825809481</updated>
       <workItem from="1511825814377" duration="17471000" />
       <workItem from="1511915087904" duration="11658000" />
-      <workItem from="1511996687563" duration="11828000" />
+      <workItem from="1511996687563" duration="12127000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="40957000" />
+    <option name="totallyTimeSpent" value="41256000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1912" y="-8" width="1936" height="1066" extended-state="6" />
@@ -397,8 +398,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Command/BackUpCommand.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="322">
-          <caret line="151" column="5" lean-forward="false" selection-start-line="151" selection-start-column="5" selection-end-line="151" selection-end-column="5" />
+        <state relative-caret-position="276">
+          <caret line="143" column="52" lean-forward="false" selection-start-line="143" selection-start-column="52" selection-end-line="143" selection-end-column="52" />
           <folding>
             <element signature="e#33#79#0#PHP" expanded="true" />
           </folding>

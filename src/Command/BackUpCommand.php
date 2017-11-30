@@ -142,9 +142,6 @@ class BackUpCommand extends Command
             $total_time = time() - $start_time;
             print "\n".$site->site." took ".$total." seconds out of total ".$total_time." seconds.";
             print "\n***************************\n";
-            if($temp_count > 5) {
-                break;
-            }
         }
         fwrite($sites_file, $sites_file_content);
         copy($destination."sites.txt", "/home/govcms/.drush/sites.txt");
