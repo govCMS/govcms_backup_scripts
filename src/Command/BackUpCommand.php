@@ -135,8 +135,12 @@ class BackUpCommand extends Command
             mkdir($destination.$site->domains[0]);
             print "Retrieving ".$site->site." [".$site->domains[0]."] dump.\n";
             exec("drush -y rsync --remove-source-files @".$site->domains[0].":/mnt/tmp/backups/".$site->domains[0].".tar.gz ".$destination.$site->domains[0]."/ > /dev/null 2>/dev/null &");
-            $domains = implode(" ", $site->collection_domains);
-            $sites_file_content .= $site->domains[0]." ".$site->domains[0].".tar.gz ".$destination.$site->domains[0]."/".$site->domains[0].".tar.gz ".$site->id." \"".$domains." ".$site->domains[0]."\"\n";
+            $domains = $site->domains[0];
+            if(isset($site->collection_domains) && !empty($site->collection_domains)) {
+                $domains = implode(" ", $site->collection_domains);
+                $domains .= " ".$site->domains[0];
+            }
+            $sites_file_content .= $site->domains[0]." ".$site->domains[0].".tar.gz ".$destination.$site->domains[0]."/".$site->domains[0].".tar.gz ".$site->id." \"".$domains."\"\n";
             $total = time() - $start;
             $total_time = time() - $start_time;
             print "\n".$site->site." took ".$total." seconds out of total ".$total_time." seconds.";
