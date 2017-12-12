@@ -153,10 +153,10 @@ class BackUpCommand extends Command
         sleep(20);
 
 
-        $di = new RecursiveDirectoryIterator($destination);
+        $di = new \RecursiveDirectoryIterator($destination);
         $file_list = array();
-        foreach (new RecursiveIteratorIterator($di) as $filename => $file) {
-            $info = new SplFileInfo($filename);
+        foreach (new \RecursiveIteratorIterator($di) as $filename => $file) {
+            $info = new \SplFileInfo($filename);
             if(is_File($file) && $info->getExtension() == 'gz') {
                 print "\n".basename($filename) . " - " . $file->getSize() . " bytes";
                 $file_list[] = basename($filename);
