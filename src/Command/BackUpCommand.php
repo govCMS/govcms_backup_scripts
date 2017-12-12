@@ -124,6 +124,7 @@ class BackUpCommand extends Command
 
         print("\nCopying file [".$destination."govcms.aliases.drushrc.php] to [/home/govcms/.drush/govcms.aliases.drushrc.php]");
         copy($destination."govcms.aliases.drushrc.php", "/home/govcms/.drush/govcms.aliases.drushrc.php");
+        $list_of_files = array();
 
         foreach($site_list as $site) {
             $temp_count++;
@@ -135,6 +136,7 @@ class BackUpCommand extends Command
             mkdir($destination.$site->domains[0]);
             print "Retrieving ".$site->site." [".$site->domains[0]."] dump.\n";
             exec("drush -y rsync --remove-source-files @".$site->domains[0].":/mnt/tmp/backups/".$site->domains[0].".tar.gz ".$destination.$site->domains[0]."/ > /dev/null 2>/dev/null &");
+            $list_of_files[] = $site->domains[0].".tar.gz";
             $domains = $site->domains[0];
             if(isset($site->collection_domains) && !empty($site->collection_domains)) {
                 $domains = implode(" ", $site->collection_domains);
@@ -148,7 +150,28 @@ class BackUpCommand extends Command
         }
         fwrite($sites_file, $sites_file_content);
         copy($destination."sites.txt", "/home/govcms/.drush/sites.txt");
-        print "\nComplete.";
+        sleep(20);
+
+
+        $di = new RecursiveDirectoryIterator($destination);
+        $file_list = array();
+        foreach (new RecursiveIteratorIterator($di) as $filename => $file) {
+            $info = new SplFileInfo($filename);
+            if(is_File($file) && $info->getExtension() == 'gz') {
+                print "\n".basename($filename) . " - " . $file->getSize() . " bytes";
+                $file_list[] = basename($filename);
+            }
+        }
+
+        if(sizeof($file_list) == sizeof($list_of_files)) {
+            print "\nComplete SUCCESSFULLY.";
+        } else {
+            print "\nComplete INCORRECT NUMBERS got " . sizeof($file_list) . " expected " . sizeof($list_of_files);
+            $diff = array_diff($file_list, $list_of_files);
+            foreach($diff as $d) {
+                print "\n".$d;
+            }
+        }
     }
 }
 
