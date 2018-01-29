@@ -97,7 +97,7 @@ class BackUpCommand extends Command
             $page++;
         }
 
-        print "\nFound " . sizeof($temp_site_list) . " sites on SaaS.\n";
+        print "\nFound " . sizeof($temp_site_list) . " total sites on SaaS.\n";
         $site_list = array();
         foreach ($temp_site_list as $key => $value) {
             $result = json_decode($client->request('GET', 'sites/' . $value->id)->getBody());
@@ -107,7 +107,7 @@ class BackUpCommand extends Command
                 $site_list[] = $result;
             }
         }
-
+        print "\nUsing " . sizeof($site_list) . " sites on SaaS.\n";
         $client = new Client([
             'base_uri' => 'https://cloudapi.acquia.com/v1/',
             'auth' => [$input->getOption('cloud-username'), $input->getOption('cloud-key')],
@@ -140,7 +140,7 @@ class BackUpCommand extends Command
                 $site_list[] = $paas;
             }
         }
-        print "\nFound " . $paas_size . " sites on PaaS.\n";
+        print "Using " . $paas_size . " sites on PaaS.\n";
 
         print "Using " . sizeof($site_list) . " sites.\n";
 
