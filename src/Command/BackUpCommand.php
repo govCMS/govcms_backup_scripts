@@ -62,7 +62,7 @@ class BackUpCommand extends Command
     'root' => '%%ROOT%%',
     'remote-host' => '%%REMOTEHOST%%',
     'remote-user' => '%%REMOTEUSER%%',
-    'ssh-options' => '-F /dev/null',
+    'ssh-options' => '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -F /dev/null',
     'path-aliases' => array(
       '%drush-script' => 'drush6',
       '%dump-dir' => '/mnt/tmp/',
@@ -186,7 +186,7 @@ class BackUpCommand extends Command
             print "\n***************************\n";
             print "Starting Backup of " . $site->site . " [" . $site->domains[0] . "] #" . $temp_count . "/" . sizeof($site_list) . "\n";
             exec("drush @" . $site->domains[0] . " ssh 'mkdir /mnt/tmp/backups;chmod 777 /mnt/tmp/backups'");
-            exec("drush @" . $site->domains[0] . " archive-dump --destination=/mnt/tmp/backups/" . $site->domains[0] . ".tar.gz --overwrite");
+            exec("drush @" . $site->domains[0] . " archive-dump --destination=/mnt/tmp/backups/" . $site->domains[0] . ".tar.gz --overwrite  --tar-options=\"--exclude=sites/default/files/* --exclude=sites/default/files.bak/* --exclude=sites/default/files-private/* --exclude=sites/default/private-files/*\"");
             print "Dump completed.\n";
             mkdir($destination . $site->domains[0]);
             print "Retrieving " . $site->site . " [" . $site->domains[0] . "] dump.\n";
