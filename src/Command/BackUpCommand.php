@@ -79,6 +79,7 @@ class BackUpCommand extends Command
         $sites_file = fopen($destination . "/sites.txt", 'w');
 
         $lines = file(dirname(__FILE__) . "/../../conf/config", FILE_IGNORE_NEW_LINES);
+        $ignore = file(dirname(__FILE__) . "/../../conf/ignore", FILE_IGNORE_NEW_LINES);
 
         print "Running govCMS Backups for " . $day_of_week . ".";
 
@@ -137,7 +138,15 @@ class BackUpCommand extends Command
                 }
 
                 $paas->collection_domains = $the_domains;
-                $site_list[] = $paas;
+                $ignored = false;
+                foreach ($ignore as $item) {
+                    if(in_array($item, $paas->domains) || in_array($item, $paas->collection_domains)) {
+                        $ignored = true;
+                    }
+                }
+                if(!$ignored) {
+                    $site_list[] = $paas;
+                }
             }
         }
         print "Using " . $paas_size . " sites on PaaS.\n";
