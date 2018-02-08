@@ -137,6 +137,10 @@ class BackUpCommand extends Command
                     $the_domains[] = $domain->name;
                 }
 
+                //Let's also add a *.govcms.gov.au URL for PaaS sites
+                $govcms_domain = strtok($paas->site, '.');
+                $the_domains[] = $govcms_domain.'.govcms.gov.au';
+
                 $paas->collection_domains = $the_domains;
                 $ignored = false;
                 foreach ($ignore as $item) {
