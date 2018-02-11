@@ -16,32 +16,12 @@
     <pharConfigPath>$PROJECT_DIR$/composer.json</pharConfigPath>
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="450">
-      <file leaf-file-name="config" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/conf/config">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="30">
-              <caret line="1" column="92" lean-forward="false" selection-start-line="1" selection-start-column="92" selection-end-line="1" selection-end-column="92" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ignore" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/conf/ignore">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
+    <leaf>
       <file leaf-file-name="BackUpCommand.php" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Command/BackUpCommand.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="596">
-              <caret line="139" column="69" lean-forward="false" selection-start-line="139" selection-start-column="69" selection-end-line="139" selection-end-column="69" />
+            <state relative-caret-position="506">
+              <caret line="220" column="17" lean-forward="false" selection-start-line="220" selection-start-column="17" selection-end-line="220" selection-end-column="17" />
               <folding>
                 <element signature="e#33#79#0#PHP" expanded="true" />
               </folding>
@@ -134,6 +114,7 @@
     <panes>
       <pane id="AndroidView" />
       <pane id="Scratches" />
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -162,7 +143,6 @@
         </subPane>
       </pane>
       <pane id="PackagesPane" />
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -303,7 +283,8 @@
       <workItem from="1517525518805" duration="1204000" />
       <workItem from="1517532587464" duration="1037000" />
       <workItem from="1517796926554" duration="624000" />
-      <workItem from="1518131387733" duration="329000" />
+      <workItem from="1518131387733" duration="523000" />
+      <workItem from="1518386661390" duration="24000" />
     </task>
     <task id="LOCAL-00001" summary="fix error message when no collection_domains exist">
       <created>1512942557758</created>
@@ -330,7 +311,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="68554000" />
+    <option name="totallyTimeSpent" value="68772000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-2891" y="-11" width="2902" height="1597" extended-state="6" />
@@ -694,14 +675,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/conf/excludes" />
-    <entry file="file://$PROJECT_DIR$/conf/config">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="30">
-          <caret line="1" column="92" lean-forward="false" selection-start-line="1" selection-start-column="92" selection-end-line="1" selection-end-column="92" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="90">
@@ -713,14 +686,20 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/conf/config">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="30">
+          <caret line="1" column="92" lean-forward="false" selection-start-line="1" selection-start-column="92" selection-end-line="1" selection-end-column="92" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Command/BackUpCommand.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="596">
-          <caret line="139" column="69" lean-forward="false" selection-start-line="139" selection-start-column="69" selection-end-line="139" selection-end-column="69" />
+        <state relative-caret-position="506">
+          <caret line="220" column="17" lean-forward="false" selection-start-line="220" selection-start-column="17" selection-end-line="220" selection-end-column="17" />
           <folding>
             <element signature="e#33#79#0#PHP" expanded="true" />
           </folding>

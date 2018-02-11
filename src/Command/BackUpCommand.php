@@ -218,7 +218,7 @@ class BackUpCommand extends Command
         }
         fwrite($sites_file, $sites_file_content);
         copy($destination . "sites.txt", "/home/govcms/.drush/sites.txt");
-        sleep(20);
+        sleep(120);
 
 
         $di = new \RecursiveDirectoryIterator($destination);
