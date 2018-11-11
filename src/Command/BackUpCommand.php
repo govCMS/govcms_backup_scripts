@@ -14,30 +14,6 @@ class BackUpCommand extends Command
         $this->setName('backup')
             ->setDescription('Downloads and stores the latest backups from govCMS SaaS')
             ->addOption(
-                'api-username',
-                null,
-                InputOption::VALUE_REQUIRED,
-                'The ACSF API username'
-            )
-            ->addOption(
-                'api-key',
-                null,
-                InputOption::VALUE_REQUIRED,
-                'The ACSF API key'
-            )
-            ->addOption(
-                'cloud-username',
-                null,
-                InputOption::VALUE_REQUIRED,
-                'The Cloud API username'
-            )
-            ->addOption(
-                'cloud-key',
-                null,
-                InputOption::VALUE_REQUIRED,
-                'The Cloud API key'
-            )
-            ->addOption(
                 'destination',
                 null,
                 InputOption::VALUE_REQUIRED,
@@ -55,22 +31,88 @@ class BackUpCommand extends Command
         mkdir($destination . "/" . $BACKUP_DATE_DIR);
         $destination = $destination . "/" . $BACKUP_DATE_DIR . "/";
 
+        if (getenv('LAGOON_OVERRIDE_SSH')) {
+            $ssh = getenv('LAGOON_OVERRIDE_SSH');
+        } else {
+            $ssh = "ssh-lagoon.govcms.amazee.io:30831";
+        }
+        list ($ssh_host, $ssh_port) = explode(":", $ssh);
+
+        if (getenv('LAGOON_OVERRIDE_API')) {
+            $api = getenv('LAGOON_OVERRIDE_API');
+        } else {
+            $api = "https://api-lagoon.govcms.amazee.io";
+        }
+        $api_url = "$api/graphql";
+
+
+        if (getenv('LAGOON_OVERRIDE_JWT_TOKEN')) {
+            $jwt_token = getenv('LAGOON_OVERRIDE_JWT_TOKEN');
+        } else {
+            exec("ssh -p $ssh_port -o LogLevel=ERROR -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t lagoon@$ssh_host token 2>&1", $token_array, $rc);
+            if ($rc !== 0) {
+              print "Could not load API JWT Token, error was: '" . implode(",", $token_array);
+              exit(1);
+            }
+            $jwt_token = $token_array[0];
+        }
+
+        $query = '{
+            allProjects {
+              name
+              environments(type:PRODUCTION) {
+                name
+                openshiftProjectName
+                routes
+                route
+              }
+            }
+          }
+        ';
+
+        $curl = curl_init($api_url);
+
+        // Build up the curl options for the GraphQL query. When using the content type
+        // 'application/json', graphql-express expects the query to be in the json
+        // encoded post body beneath the 'query' property.
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($curl, CURLOPT_POST, TRUE);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($curl, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json', "Authorization: Bearer $jwt_token"]);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode(array(
+        'query' => $query,
+        )));
+        $response = curl_exec($curl);
+
+        // Check if the curl request succeeded.
+        if ($response === FALSE) {
+            $info = var_export(curl_getinfo($curl), TRUE);
+            $error = curl_error($curl);
+            curl_close($curl);
+
+            print "Lagoon API ERROR:";
+            print $info;
+            print $error;
+            exit(1);
+        }
+
+        curl_close($curl);
+        $response = json_decode($response);
+
         $START_PHP = "<?php ";
         $TEMPLATE = "\n
 \$aliases['%%ALIASNAME%%'] = array(
-    'uri' => '%%ALIASNAME%%',
-    'root' => '%%ROOT%%',
-    'remote-host' => '%%REMOTEHOST%%',
-    'remote-user' => '%%REMOTEUSER%%',
-    'ssh-options' => '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -F /dev/null',
-    'path-aliases' => array(
-      '%drush-script' => 'drush6',
-      '%dump-dir' => '/mnt/tmp/',
-    ),
+    'uri' => '%%URI%%',
+    'remote-host' => '$ssh_host',
+    'remote-user' => '%%ALIASNAME%%',
+    'ssh-options' => '-o LogLevel=ERROR -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $ssh_port',
     'command-specific' => array(
       'sql-dump' => array(
          'no-ordered-dump' => TRUE,
-         'structure-tables-list' => 'apachesolr_index_entities,apachesolr_index_entities_node,authmap,cache,cache_apachesolr,cache_block,cache_bootstrap,cache_entity_comment,cache_entity_file,cache_entity_node,cache_entity_taxonomy_term,cache_entity_taxonomy_vocabulary,cache_entity_user,cache_field,cache_file_styles,cache_filter,cache_form,cache_image,cache_libraries,cache_menu,cache_metatag,cache_page,cache_panels,cache_path,cache_rules,cache_styles,cache_token,cache_update,cache_views,cache_views_data,captcha_sessions,ctools_css_cache,ctools_object_cache,flood,forward_log,forward_statistics,history,queue,sessions,watchdog',
+         'structure-tables-list' => 'apachesolr_index_entities,apachesolr_index_entities_node,authmap,cache,cache_*,captcha_sessions,ctools_css_cache,ctools_object_cache,flood,forward_log,forward_statistics,history,queue,sessions,watchdog',
       ),
     ),
 );";
@@ -78,118 +120,38 @@ class BackUpCommand extends Command
         $alias_file = fopen($destination . "/govcms.aliases.drushrc.php", 'w');
         $sites_file = fopen($destination . "/sites.txt", 'w');
 
-        $lines = file(dirname(__FILE__) . "/../../conf/config", FILE_IGNORE_NEW_LINES);
-        $ignore = file(dirname(__FILE__) . "/../../conf/ignore", FILE_IGNORE_NEW_LINES);
 
         print "Running govCMS Backups for " . $day_of_week . ".";
 
-        $client = new Client([
-            'base_uri' => 'https://www.govcms.acsitefactory.com/api/v1/',
-            'auth' => [$input->getOption('api-username'), $input->getOption('api-key')],
-        ]);
-
-        $result_size = 1;
-        $temp_site_list = array();
-        $page = 1;
-        while ($result_size > 0) {
-            $result = json_decode($client->request('GET', 'sites', array('query' => array('page' => $page, 'limit' => 100)))->getBody());
-            $result_size = sizeof($result->sites);
-            $temp_site_list = array_merge($temp_site_list, $result->sites);
-            $page++;
-        }
-
-        print "\nFound " . sizeof($temp_site_list) . " total sites on SaaS.\n";
-        $site_list = array();
-        foreach ($temp_site_list as $key => $value) {
-            $result = json_decode($client->request('GET', 'sites/' . $value->id)->getBody());
-            if ($day_of_week == $FULL_DAY_TO_RUN) {
-                $site_list[] = $result;
-            } else if (isset($result->is_primary) && $result->is_primary) {
-                $site_list[] = $result;
-            }
-        }
-        print "\nUsing " . sizeof($site_list) . " sites on SaaS.\n";
-        $client = new Client([
-            'base_uri' => 'https://cloudapi.acquia.com/v1/',
-            'auth' => [$input->getOption('cloud-username'), $input->getOption('cloud-key')],
-        ]);
-        $sites = json_decode($client->request('GET', 'sites.json')->getBody());
-        $paas_size = 0;
-        foreach ($sites as $site) {
-            if(substr($site, 0, strlen('prod:')) === 'prod:') {
-                $paas_size++;
-                $endpoint = implode('/', ['sites', $site, 'envs', 'prod.json']);
-                $server = json_decode($client->request('GET', $endpoint)->getBody());
-                $paas = new \stdClass();
-                $paas->id = 0;
-                $paas->stack_id = 0;
-                $paas->site = $server->default_domain;
-                $paas->domains = array($server->default_domain);
-                $paas->root = '/var/www/html/'.$server->unix_username.'/docroot';
-                $paas->remote_host = $server->ssh_host;
-                $paas->remote_user = $server->unix_username;
-
-                $the_domains = array();
-
-                $endpoint = implode('/', ['sites', $site, 'envs', 'prod', 'domains.json']);
-                $domains = json_decode($client->request('GET', $endpoint)->getBody());
-                foreach ($domains as $domain) {
-                    $the_domains[] = $domain->name;
-                }
-
-                //Let's also add a *.govcms.gov.au URL for PaaS sites
-                $govcms_domain = strtok($paas->site, '.');
-                $the_domains[] = $govcms_domain.'.govcms.gov.au';
-
-                $paas->collection_domains = $the_domains;
-                $ignored = false;
-                foreach ($ignore as $item) {
-                    if(in_array($item, $paas->domains) || in_array($item, $paas->collection_domains)) {
-                        $ignored = true;
-                    }
-                }
-                if(!$ignored) {
-                    $site_list[] = $paas;
-                }
-            }
-        }
-        print "Using " . $paas_size . " sites on PaaS.\n";
-
-        print "Using " . sizeof($site_list) . " sites.\n";
+        // @TODO: is this check for Sunday vs regular days still needed?
+        // print "\nFound " . sizeof($temp_site_list) . " total sites on SaaS.\n";
+        // $site_list = array();
+        // foreach ($temp_site_list as $key => $value) {
+        //     $result = json_decode($client->request('GET', 'sites/' . $value->id)->getBody());
+        //     if ($day_of_week == $FULL_DAY_TO_RUN) {
+        //         $site_list[] = $result;
+        //     } else if (isset($result->is_primary) && $result->is_primary) {
+        //         $site_list[] = $result;
+        //     }
+        // }
 
         $temp_count = 0;
         $alias_file_content = $START_PHP;
         $sites_file_content = "";
-        foreach ($site_list as $site) {
-            $single_alias = $TEMPLATE;
-            $root = "";
-            $remote_host = "";
-            $remote_user = "";
-            if (isset($site->stack_id) && $site->stack_id > 0) {
-                foreach ($lines as $line) {
-                    $temp_array = explode(" ", $line);
-                    if ($temp_array[0] == $site->stack_id) {
-                        $root = $temp_array[3];
-                        $remote_host = $temp_array[2];
-                        $remote_user = $temp_array[1];
-                    }
-                }
-            } else {
-                $root = $site->root;
-                $remote_host = $site->remote_host;
-                $remote_user = $site->remote_user;
+        foreach ($response->data->allProjects as $project) {
+            if (count($project->environments) == 0) {
+                print "\nINFO: No production environment found for $project->name";
             }
-            $variables = array("ALIASNAME" => $site->domains[0], "ROOT" => $root, "REMOTEHOST" => $remote_host, "REMOTEUSER" => $remote_user);
-
-            foreach ($variables as $key => $value) {
-                $single_alias = str_replace('%%' . $key . '%%', $value, $single_alias);
+            foreach ($project->environments as $environment) {
+                $alias_file_content .= str_replace([ '%%ALIASNAME%%', '%%URI%%' ] , [ $environment->openshiftProjectName, $environment->route ] , $TEMPLATE);
+                $site_list[] = (object) ['name' => $environment->openshiftProjectName, 'routes' => $environment->routes];
             }
-            $alias_file_content .= $single_alias;
         }
 
         fwrite($alias_file, $alias_file_content);
 
         print("\nCopying file [" . $destination . "govcms.aliases.drushrc.php] to [/home/govcms/.drush/govcms.aliases.drushrc.php]");
+        mkdir('/home/govcms/.drush/', 0777, true);
         copy($destination . "govcms.aliases.drushrc.php", "/home/govcms/.drush/govcms.aliases.drushrc.php");
         $list_of_files = array();
 
@@ -197,28 +159,22 @@ class BackUpCommand extends Command
             $temp_count++;
             $start = time();
             print "\n***************************\n";
-            print "Starting Backup of " . $site->site . " [" . $site->domains[0] . "] #" . $temp_count . "/" . sizeof($site_list) . "\n";
-            exec("drush @" . $site->domains[0] . " ssh 'mkdir /mnt/tmp/backups;chmod 777 /mnt/tmp/backups'");
-            exec("drush @" . $site->domains[0] . " archive-dump --destination=/mnt/tmp/backups/" . $site->domains[0] . ".tar.gz --overwrite  --tar-options=\"--exclude=sites/default/files/* --exclude=sites/default/files.bak/* --exclude=sites/default/files-private/* --exclude=sites/default/private-files/*\"");
+            print "Starting Backup of " . $site->name . " #" . $temp_count . "/" . sizeof($site_list) . "\n";
+            exec("drush @" . $site->name . " archive-dump --destination=/tmp/dr-backups/" . $site->name . ".tar.gz --overwrite  --tar-options=\"--exclude=sites/default/files/* --exclude=sites/default/files.bak/* --exclude=sites/default/files/private/* \"");
             print "Dump completed.\n";
-            mkdir($destination . $site->domains[0]);
-            print "Retrieving " . $site->site . " [" . $site->domains[0] . "] dump.\n";
-            exec("drush -y rsync --remove-source-files @" . $site->domains[0] . ":/mnt/tmp/backups/" . $site->domains[0] . ".tar.gz " . $destination . $site->domains[0] . "/ > /dev/null 2>/dev/null &");
-            $list_of_files[] = $site->domains[0] . ".tar.gz";
-            $domains = $site->domains[0];
-            if (isset($site->collection_domains) && !empty($site->collection_domains)) {
-                $domains = implode(" ", $site->collection_domains);
-                $domains .= " " . $site->domains[0];
-            }
-            $sites_file_content .= $site->domains[0] . " " . $site->domains[0] . ".tar.gz " . $destination . $site->domains[0] . "/" . $site->domains[0] . ".tar.gz " . $site->id . " \"" . $domains . "\"\n";
+            mkdir($destination . $site->name);
+            print "Retrieving " . $site->name . " dump.\n";
+            exec("drush -y rsync --remove-source-files @" . $site->name . ":/tmp/dr-backups/" . $site->name . ".tar.gz " . $destination . $site->name . "/ ");
+            $list_of_files[] = $site->name . ".tar.gz";
+            $sites_file_content .= $site->name . " " . $site->name . ".tar.gz " . $destination . $site->name . "/" . $site->name . ".tar.gz 0 \"" . $site->routes . "\"\n";
             $total = time() - $start;
             $total_time = time() - $start_time;
-            print "\n" . $site->site . " took " . $total . " seconds out of total " . $total_time . " seconds.";
+            print "\n" . $site->name . " took " . $total . " seconds out of total " . $total_time . " seconds.";
             print "\n***************************\n";
         }
         fwrite($sites_file, $sites_file_content);
         copy($destination . "sites.txt", "/home/govcms/.drush/sites.txt");
-        sleep(120);
+        //sleep(120); // @TODO: what is this for?
 
 
         $di = new \RecursiveDirectoryIterator($destination);
