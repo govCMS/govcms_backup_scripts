@@ -123,18 +123,6 @@ class BackUpCommand extends Command
 
         print "Running govCMS Backups for " . $day_of_week . ".";
 
-        // @TODO: is this check for Sunday vs regular days still needed?
-        // print "\nFound " . sizeof($temp_site_list) . " total sites on SaaS.\n";
-        // $site_list = array();
-        // foreach ($temp_site_list as $key => $value) {
-        //     $result = json_decode($client->request('GET', 'sites/' . $value->id)->getBody());
-        //     if ($day_of_week == $FULL_DAY_TO_RUN) {
-        //         $site_list[] = $result;
-        //     } else if (isset($result->is_primary) && $result->is_primary) {
-        //         $site_list[] = $result;
-        //     }
-        // }
-
         $temp_count = 0;
         $alias_file_content = $START_PHP;
         $sites_file_content = "";
@@ -166,7 +154,8 @@ class BackUpCommand extends Command
             print "Retrieving " . $site->name . " dump.\n";
             exec("drush -y rsync --remove-source-files @" . $site->name . ":/tmp/dr-backups/" . $site->name . ".tar.gz " . $destination . $site->name . "/ ");
             $list_of_files[] = $site->name . ".tar.gz";
-            $sites_file_content .= $site->name . " " . $site->name . ".tar.gz " . $destination . $site->name . "/" . $site->name . ".tar.gz 0 \"" . $site->routes . "\"\n";
+            $routes = str_replace(['https://', 'http://', ','], ['', '', ' '], $site->routes);
+            $sites_file_content .= $site->name . " " . $site->name . ".tar.gz " . $destination . $site->name . "/" . $site->name . ".tar.gz 0 \"" . $routes . "\"\n";
             $total = time() - $start;
             $total_time = time() - $start_time;
             print "\n" . $site->name . " took " . $total . " seconds out of total " . $total_time . " seconds.";
