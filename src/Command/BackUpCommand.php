@@ -138,9 +138,9 @@ class BackUpCommand extends Command
 
         fwrite($alias_file, $alias_file_content);
 
-        print("\nCopying file [" . $destination . "govcms.aliases.drushrc.php] to [/home/govcms/.drush/govcms.aliases.drushrc.php]");
-        mkdir('/home/govcms/.drush/', 0777, true);
-        copy($destination . "govcms.aliases.drushrc.php", "/home/govcms/.drush/govcms.aliases.drushrc.php");
+        print("\nCopying file [" . $destination . "govcms.aliases.drushrc.php] to [/home/svc_fin_gcms_p_mgt/.drush/govcms.aliases.drushrc.php]");
+        mkdir('/home/svc_fin_gcms_p_mgt/.drush/', 0777, true);
+        copy($destination . "govcms.aliases.drushrc.php", "/home/svc_fin_gcms_p_mgt/.drush/govcms.aliases.drushrc.php");
         $list_of_files = array();
 
         foreach ($site_list as $site) {
@@ -162,7 +162,7 @@ class BackUpCommand extends Command
             print "\n***************************\n";
         }
         fwrite($sites_file, $sites_file_content);
-        copy($destination . "sites.txt", "/home/govcms/.drush/sites.txt");
+        copy($destination . "sites.txt", "/home/svc_fin_gcms_p_mgt/.drush/sites.txt");
         //sleep(120); // @TODO: what is this for?
 
 
