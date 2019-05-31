@@ -2,3 +2,5 @@ vendor
 conf/config.json
 conf/config
 conf/ignore
+backup-destination/*
+!backup-destination/.gitkeep

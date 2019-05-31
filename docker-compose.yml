@@ -1,0 +1,14 @@
+version: '2.3'
+
+services:
+  backup:
+    build: .
+    command: php bin/backup backup --destination /app/backup-destination
+    volumes:
+      - ".:/app"
+    environment:
+      - PATH=/app/vendor/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      - HOME=/home/svc_fin_gcms_p_mgt
+      - SSH_AUTH_SOCK=/tmp/amazeeio_ssh-agent/socket
+    volumes_from: # mount the ssh-agent from the pygmy or cachalot ssh-agent
+      - container:amazeeio-ssh-agent
